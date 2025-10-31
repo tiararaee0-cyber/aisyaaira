@@ -1,0 +1,939 @@
+{\rtf1\ansi\ansicpg1252\deff0\nouicompat\deflang1033{\fonttbl{\f0\fnil\fcharset0 Calibri;}{\f1\fnil Calibri;}{\f2\fnil\fcharset1 Segoe UI Symbol;}{\f3\fnil\fcharset1 Segoe UI Symbol;}{\f4\fnil\fcharset1 Cambria Math;}}
+{\colortbl ;\red0\green0\blue255;}
+{\*\generator Riched20 10.0.19041}{\*\mmathPr\mmathFont4\mwrapIndent1440 }\viewkind4\uc1 
+\pard\sa200\sl276\slmult1\f0\fs22\lang9\par
+### Django Documentation, Rilis 5.2.8.dev20251029180008\par
+\par
+#### Kapan menggunakan `include()`\par
+\par
+Kamu harus selalu menggunakan `include()` ketika menyertakan pola URL lainnya. Satu-satunya pengecualian adalah `admin.site.urls`, yang merupakan kumpulan pola URL bawaan yang disediakan oleh Django untuk situs admin standar.\par
+\par
+Sekarang kamu memiliki tampilan indeks baru di dalam `URLconf`. Verifikasi bahwa semuanya berfungsi dengan perintah berikut:\par
+\par
+```\par
+python manage.py runserver\par
+```\par
+\par
+Buka `http://localhost:8000/polls/` di browser kamu, dan kamu seharusnya melihat teks:\par
+**"Hello, world. You\rquote re at the polls index."**,\par
+yang sudah kamu definisikan di tampilan indeks tadi.\par
+\par
+---\par
+\par
+#### Halaman tidak ditemukan?\par
+\par
+Jika kamu mendapatkan kesalahan halaman tidak ditemukan, pastikan kamu menuju ke:\par
+`http://localhost:8000/polls/`\par
+dan bukan\par
+`http://localhost:8000/`.\par
+\par
+Setelah kamu nyaman dengan konsep dasar permintaan dan respons, baca **bagian 2** dari tutorial ini untuk mulai bekerja dengan basis data.\par
+\par
+---\par
+\par
+### 2.4 Menulis Aplikasi Django Pertamamu, bagian 2\par
+\par
+Tutorial ini dimulai setelah **Tutorial 1** selesai. Kita akan menyiapkan basis data, membuat model pertamamu, dan mendapatkan pengenalan singkat tentang situs admin otomatis bawaan Django.\par
+\par
+---\par
+\par
+#### Di mana mendapatkan bantuan\par
+\par
+Jika kamu mengalami kesulitan selama mengikuti tutorial ini, silakan lihat bagian **Getting Help** di **FAQ** Django.\par
+\par
+---\par
+\par
+### 2.4.1 Penyiapan Basis Data\par
+\par
+Sekarang, buka `mysite/settings.py`. Ini adalah modul Python normal dengan variabel tingkat modul yang merepresentasikan pengaturan Django.\par
+\par
+Secara bawaan, konfigurasi `DATABASES` menggunakan SQLite. Jika kamu baru mengenal basis data, atau hanya ingin mencoba Django, ini adalah pilihan termudah. SQLite sudah disertakan dalam Python, jadi kamu tidak perlu menginstal apa pun untuk menggunakannya.\par
+\par
+Namun, saat kamu memulai proyek Django pertamamu yang sebenarnya, kamu mungkin ingin menggunakan basis data yang lebih andal dan dapat diskalakan seperti PostgreSQL. Django juga memiliki dukungan untuk pengalihan basis data (database switching) di masa depan.\par
+\par
+Jika kamu ingin menggunakan basis data lain, baca dokumentasi tentang cara menyesuaikan dan mengonfigurasi basis datamu sendiri.\par
+\par
+\par
+\par
+### **Dokumentasi Django, Rilis 5.2.8.dev202510180008**\par
+\par
+Saat kamu mengedit `mysite/settings.py`, atur `TIME_ZONE` ke zona waktu kamu.\par
+\par
+Juga, perhatikan pengaturan `INSTALLED_APPS` di bagian atas file tersebut. Ini mencantumkan nama semua aplikasi Django yang diaktifkan dalam instance Django kamu. Aplikasi ini dapat digunakan di beberapa proyek, dan kamu juga dapat membuat serta membagikannya kepada orang lain.\par
+\par
+Secara bawaan, `INSTALLED_APPS` berisi aplikasi berikut, yang disertakan dengan Django:\par
+\par
+* `django.contrib.admin` \f1\endash  Situs admin. Kamu akan menggunakannya sebentar lagi.\par
+* `django.contrib.auth` \endash  Sistem otentikasi.\par
+* `django.contrib.contenttypes` \endash  Kerangka kerja untuk tipe konten.\par
+* `django.contrib.sessions` \endash  Kerangka kerja sesi.\par
+* `django.contrib.messages` \endash  Kerangka kerja pesan.\par
+* `django.contrib.staticfiles` \endash  Kerangka kerja untuk mengelola file statis.\par
+\par
+Aplikasi-aplikasi ini diaktifkan secara default sebagai kenyamanan untuk kasus umum.\par
+\par
+Beberapa aplikasi di atas menggunakan setidaknya satu tabel database, jadi kita perlu membuat tabel-tabel ini di database sebelum dapat digunakan. Untuk melakukannya, jalankan perintah berikut:\par
+\par
+```\par
+python manage.py migrate\par
+```\par
+\par
+Perintah `migrate` akan memeriksa pengaturan `INSTALLED_APPS` dan membuat tabel database yang diperlukan sesuai dengan pengaturan database di `mysite/settings.py`. Ini juga akan menjalankan migrasi database bawaan untuk aplikasi yang disertakan (akan dijelaskan nanti). Kamu akan melihat pesan untuk setiap migrasi yang diterapkan.\par
+\par
+Jika kamu tertarik, jalankan perintah seperti berikut untuk database kamu, misalnya:\par
+\par
+* `\\dt` (PostgreSQL)\par
+* `SHOW TABLES;` (MariaDB, MySQL)\par
+* `.tables` (SQLite)\par
+* atau `SELECT TABLE_NAME FROM USER_TABLES;` (Oracle)\par
+\par
+Perintah-perintah tersebut akan menampilkan tabel yang dibuat oleh Django.\par
+\par
+---\par
+\par
+#### **Untuk yang minimalis**\par
+\par
+Seperti yang disebutkan, aplikasi bawaan disertakan untuk kasus umum, tetapi tidak semua orang membutuhkannya.\par
+Jika kamu tidak ingin menggunakan semuanya, kamu dapat mengomentari atau menghapus baris yang sesuai dari `INSTALLED_APPS` sebelum menjalankan `migrate`.\par
+Perintah `migrate` hanya akan menjalankan migrasi untuk aplikasi yang tercantum dalam `INSTALLED_APPS`.\par
+\par
+---\par
+\par
+### **2.4.2 Membuat Model**\par
+\par
+Sekarang kita akan mendefinisikan model\emdash secara sederhana, tata letak database kamu, dengan metadata tambahan.\par
+\par
+#### **Filosofi**\par
+\par
+Model adalah lapisan tunggal yang menggambarkan struktur informasi tentang data kamu.\par
+Model ini berisi field penting dan perilaku data yang kamu simpan.\par
+Django mengikuti *Prinsip DRY (Don't Repeat Yourself)*.\par
+Tujuannya adalah untuk mendefinisikan data kamu hanya sekali.\par
+\par
+\par
+\par
+### **Django Documentation, Release 5.2.8.dev202510180008**\par
+\par
+Model ini berada di satu tempat dan secara otomatis menurunkan hal-hal lain darinya.\par
+\par
+Ini juga mencakup migrasi \emdash  tidak seperti di Ruby On Rails, misalnya, migrasi di Django sepenuhnya diturunkan dari model kamu, dan pada dasarnya Django dapat menjalankan semuanya untuk memperbarui skema basis data agar sesuai dengan model kamu saat ini.\par
+\par
+Untuk aplikasi polling kita, kita akan membuat dua model: **Question** dan **Choice**.\par
+Sebuah **Question** memiliki teks pertanyaan dan tanggal publikasi.\par
+Sebuah **Choice** memiliki dua field: teks pilihan dan jumlah suara.\par
+Setiap **Choice** dikaitkan dengan sebuah **Question**.\par
+\par
+Konsep-konsep ini direpresentasikan oleh kelas Python.\par
+Edit file `polls/models.py`, sehingga terlihat seperti ini:\par
+\par
+```python\par
+from django.db import models\par
+\par
+class Question(models.Model):\par
+    question_text = models.CharField(max_length=200)\par
+    pub_date = models.DateTimeField("date published")\par
+\par
+class Choice(models.Model):\par
+    question = models.ForeignKey(Question, on_delete=models.CASCADE)\par
+    choice_text = models.CharField(max_length=200)\par
+    votes = models.IntegerField(default=0)\par
+```\par
+\par
+Di sini, setiap model direpresentasikan oleh sebuah kelas yang mewarisi dari `django.db.models.Model`.\par
+Setiap model memiliki sejumlah variabel kelas, yang masing-masing merepresentasikan sebuah field basis data dalam model.\par
+\par
+Setiap field direpresentasikan oleh instance dari kelas **Field** \endash  misalnya, `CharField` untuk field karakter dan `DateTimeField` untuk field tanggal/waktu.\par
+Hal ini memberitahu Django jenis data yang dimiliki setiap field.\par
+\par
+Nama setiap instance field (misalnya, `question_text` atau `pub_date`) adalah nama field dalam format ramah-mesin.\par
+Kamu akan menggunakan nama ini di kode Python kamu, dan database akan menggunakannya sebagai nama kolom.\par
+\par
+Kamu dapat memberikan argumen posisi opsional pertama ke **Field** untuk menentukan nama yang dapat dibaca manusia.\par
+Itu digunakan di beberapa bagian terkomputerisasi dari Django, dan di dokumentasi admin.\par
+Jika argumen ini tidak diberikan, Django akan menggunakan nama ramah-mesin sebagai gantinya.\par
+Dalam contoh ini, kita hanya mendefinisikan nama yang dapat dibaca manusia untuk `Question.pub_date`.\par
+Untuk semua field lain di model ini, nama ramah-mesin sudah cukup sebagai nama yang dapat dibaca manusia.\par
+\par
+Beberapa kelas **Field** memiliki argumen yang diperlukan.\par
+`CharField`, misalnya, mengharuskan kamu memberikan `max_length`.\par
+Itu digunakan tidak hanya di database sendiri, tetapi juga dalam validasi nanti.\par
+\par
+Sebuah **Field** juga dapat memiliki argumen opsional.\par
+Dalam kasus ini, kita menetapkan nilai default `votes` ke 0.\par
+\par
+\par
+\par
+---\par
+\par
+### **Mengaktifkan Model**\par
+\par
+Sekarang Django tahu bahwa ada dua model di aplikasi `polls`.\par
+Namun, model ini belum dimasukkan ke dalam database kamu.\par
+Untuk melakukannya, kita harus memberi tahu Django bahwa model-model tersebut adalah bagian dari aplikasi kita dan kemudian membuat migrasi yang akan menghasilkan tabel-tabelnya di database.\par
+\par
+1. **Tambahkan aplikasi ke `INSTALLED_APPS`**\par
+\par
+   Edit file `mysite/settings.py` dan tambahkan referensi ke konfigurasi aplikasi `polls` di pengaturan `INSTALLED_APPS` kamu.\par
+   Itu akan terlihat seperti ini:\par
+\par
+   ```python\par
+   INSTALLED_APPS = [\par
+       'polls.apps.PollsConfig',\par
+       'django.contrib.admin',\par
+       'django.contrib.auth',\par
+       'django.contrib.contenttypes',\par
+       'django.contrib.sessions',\par
+       'django.contrib.messages',\par
+       'django.contrib.staticfiles',\par
+   ]\par
+   ```\par
+\par
+   Dengan menambahkan `'polls.apps.PollsConfig'`, kamu memberi tahu Django untuk menyertakan aplikasi `polls` saat proyek dijalankan.\par
+\par
+2. **Buat migrasi untuk model baru**\par
+\par
+   Jalankan perintah ini di terminal kamu:\par
+\par
+   ```bash\par
+   python manage.py makemigrations polls\par
+   ```\par
+\par
+   Django akan memberi tahu bahwa ia telah membuat file migrasi baru, sesuatu seperti:\par
+\par
+   ```\par
+   Migrations for 'polls':\par
+     polls/migrations/0001_initial.py\par
+       - Create model Question\par
+       - Create model Choice\par
+   ```\par
+\par
+   File migrasi adalah skrip Python yang memberi tahu Django bagaimana membuat (atau mengubah) tabel di database untuk mencerminkan model kamu.\par
+\par
+3. **Terapkan migrasi ke database**\par
+\par
+   Setelah migrasi dibuat, jalankan perintah berikut untuk menerapkannya:\par
+\par
+   ```bash\par
+   python manage.py migrate\par
+   ```\par
+\par
+   Ini akan menjalankan migrasi yang belum diterapkan, membuat tabel-tabel baru di database sesuai model `Question` dan `Choice`.\par
+\par
+---\par
+\par
+### **Memeriksa Model yang Diterapkan**\par
+\par
+Kamu dapat melihat SQL yang akan dijalankan Django tanpa benar-benar mengeksekusinya, dengan menggunakan perintah:\par
+\par
+```bash\par
+python manage.py sqlmigrate polls 0001\par
+```\par
+\par
+Perintah ini akan menampilkan pernyataan SQL mentah yang digunakan untuk membuat tabel-tabel di database, misalnya (bergantung pada backend database kamu):\par
+\par
+```sql\par
+CREATE TABLE "polls_question" (\par
+    "id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,\par
+    "question_text" varchar(200) NOT NULL,\par
+    "pub_date" datetime NOT NULL\par
+);\par
+CREATE TABLE "polls_choice" (\par
+    "id" integer NOT NULL PRIMARY KEY AUTOINCREMENT,\par
+    "question_id" integer NOT NULL REFERENCES "polls_question" ("id") DEFERRABLE INITIALLY DEFERRED,\par
+    "choice_text" varchar(200) NOT NULL,\par
+    "votes" integer NOT NULL\par
+);\par
+```\par
+\par
+---\par
+\par
+### **Kesimpulan**\par
+\par
+Sekarang kamu memiliki dua model (`Question` dan `Choice`) yang sepenuhnya terintegrasi dengan database.\par
+Langkah selanjutnya adalah belajar bagaimana cara berinteraksi dengan model-model ini menggunakan **API ORM Django**, yang memungkinkan kamu membuat, membaca, memperbarui, dan menghapus data dengan sintaks Python sederhana.\par
+\par
+\f0\par
+\par
+---\par
+\par
+### Teks Terjemahan Halaman 31 (Django Documentation)\par
+\par
+Dengan menjalankan perintah `makemigrations`, kamu memberi tahu Django bahwa kamu telah membuat beberapa perubahan pada model di proyekmu (dalam hal ini kamu membuat model baru) dan bahwa kamu ingin perubahan tersebut disimpan sebagai migrasi.\par
+\par
+Migrasi adalah cara Django menyimpan perubahan pada model (dan karenanya pada skema database) \f1\emdash  mereka adalah file di dalam direktori disk. Kamu bisa membaca migrasi untuk modelmu jika mau; misalnya, file ini `polls/migrations/0001_initial.py`. Jangan khawatir, kamu tidak diharapkan untuk membaca setiap kali Django membuatnya, tetapi file tersebut dirancang agar mudah dibaca oleh manusia jika kamu ingin memahami bagaimana Django melakukan perubahan.\par
+\par
+Ada perintah yang akan menjalankan migrasi ini untukmu dan mengelola skema database secara otomatis \emdash  perintah ini disebut `migrate`, dan kita akan sampai ke sana sebentar lagi. Sekarang, mari kita lihat SQL apa yang akan dijalankan oleh migrasi tersebut.\par
+Jalankan perintah berikut di terminalmu:\par
+\par
+```\par
+python manage.py sqlmigrate polls 0001\par
+```\par
+\par
+Kamu akan melihat sesuatu yang mirip dengan berikut ini (kami telah memformatnya agar lebih mudah dibaca):\par
+\par
+```\par
+BEGIN;\par
+--\par
+-- Membuat model Question\par
+--\par
+CREATE TABLE "polls_question" (\par
+    "id" bigint NOT NULL PRIMARY KEY GENERATED BY DEFAULT AS IDENTITY,\par
+    "question_text" varchar(200) NOT NULL,\par
+    "pub_date" timestamp with time zone NOT NULL\par
+);\par
+\par
+--\par
+-- Membuat model Choice\par
+--\par
+CREATE TABLE "polls_choice" (\par
+    "id" bigint NOT NULL PRIMARY KEY GENERATED BY DEFAULT AS IDENTITY,\par
+    "choice_text" varchar(200) NOT NULL,\par
+    "votes" integer NOT NULL,\par
+    "question_id" bigint NOT NULL\par
+);\par
+ALTER TABLE "polls_choice"\par
+ADD CONSTRAINT "polls_choice_question_id_c5b4b260_fk_polls_question_id"\par
+FOREIGN KEY ("question_id")\par
+REFERENCES "polls_question" ("id")\par
+DEFERRABLE INITIALLY DEFERRED;\par
+```\par
+\f0\par
+\par
+```\par
+CREATE INDEX "polls_choice_question_id_c5b4b260" ON "polls_choice" ("question_id");\par
+COMMIT;\par
+```\par
+\par
+**Catatan berikut ini:**\par
+\par
+* Hasil keluaran yang tepat akan berbeda tergantung pada basis data yang kamu gunakan. Contoh di atas dihasilkan untuk PostgreSQL.\par
+* Nama tabel dibuat secara otomatis dengan menggabungkan nama aplikasi (`polls`) dan nama model dalam huruf kecil (`question` dan `choice`). (Kamu bisa mengubah perilaku ini.)\par
+* Primary key (`id`) ditambahkan secara otomatis. (Kamu juga dapat menggantinya.)\par
+* Secara konvensi, Django menambahkan `"_id"` ke nama field *foreign key*. (Ya, kamu juga bisa mengubah ini.)\par
+* Hubungan *foreign key* ditampilkan secara eksplisit oleh *FOREIGN KEY constraint*. Jangan khawatir tentang bagian `DEFERRABLE`; ini hanya memberi tahu PostgreSQL untuk menunda pemeriksaan *foreign key* hingga akhir transaksi.\par
+* Itu terkait dengan basis data yang kamu gunakan, misalnya tipe field khusus basis data seperti `auto_increment` (MySQL), `bigserial PRIMARY KEY GENERATED BY DEFAULT AS IDENTITY` (PostgreSQL), atau *integer primary key autoincrement* (SQLite) ditambahkan secara otomatis oleh Django. Hal yang sama berlaku untuk pengutipan nama field\f1\emdash misalnya, menggunakan tanda kutip ganda atau tunggal.\par
+* Perintah `sqlmigrate` sebenarnya **tidak menjalankan migrasi** pada basis data kamu \emdash  alih-alih, ia hanya menampilkannya di layar agar kamu dapat melihat SQL yang akan dijalankan Django. Ini berguna untuk memeriksa apa yang akan dilakukan Django, atau jika kamu memiliki administrator basis data yang perlu meninjau skrip SQL sebelum dijalankan.\par
+\par
+Jika kamu tertarik, kamu juga dapat menjalankan perintah `python manage.py check`; ini memeriksa apakah ada masalah dalam proyekmu tanpa membuat migrasi atau menyentuh basis data.\par
+\par
+Sekarang, jalankan perintah `migrate` untuk membuat tabel model di basis data kamu:\par
+\par
+```\par
+$ python manage.py migrate\par
+```\par
+\par
+Output-nya kira-kira seperti ini:\par
+\par
+```\par
+Operations to perform:\par
+  Apply all migrations: admin, auth, contenttypes, polls, sessions\par
+Running migrations:\par
+  Rendering model states... DONE\par
+  Applying polls.0001_initial... OK\par
+```\par
+\par
+Perintah `migrate` menjalankan semua migrasi yang belum diterapkan (Django melacak migrasi mana yang sudah diterapkan dengan membuat tabel khusus di basis data). Ia menjalankan migrasi-migrasi tersebut terhadap basis data kamu \emdash  pada dasarnya menyinkronkan perubahan yang telah kamu buat pada model dengan skema di basis data.\par
+\par
+Migrasi sangat kuat dan memungkinkan kamu mengubah model seiring waktu, saat kamu mengembangkan proyek, tanpa perlu menghapus basis data atau tabel yang sudah ada. Django memiliki spesialisasi dalam memperbarui basis data langsung, dengan aman dan mudah.\f0\lang1033   \par
+\par
+\par
+\par
+Tanpa kehilangan data. Kita akan membahasnya lebih dalam di bagian selanjutnya dari tutorial ini, tetapi untuk saat ini, ingat panduan tiga langkah untuk membuat perubahan pada model:\par
+\par
+1. **Ubah model kamu** (`models.py`).\par
+2. **Jalankan** `python manage.py makemigrations` **untuk membuat migrasi** dari perubahan tersebut.\par
+3. **Jalankan** `python manage.py migrate` **untuk menerapkan perubahan tersebut ke basis data.**\par
+\par
+Alasan mengapa ini adalah perintah yang terpisah adalah karena kamu akan meng-*commit* migrasi ke sistem kontrol versi bersama dengan aplikasi web kamu; hal ini tidak hanya membuat proses pengembangan lebih mudah, tetapi juga memungkinkan pengembang lain dan lingkungan produksi untuk mendapatkan struktur basis data yang sama.\par
+\par
+Baca dokumentasi **django-admin** untuk informasi lengkap tentang apa yang dapat dilakukan oleh utilitas **manage.py**.\par
+\par
+---\par
+\par
+### 2.4.4 Bermain dengan API\par
+\par
+Sekarang, mari kita masuk ke *interactive Python shell* dan bereksperimen dengan API Django gratis.\par
+Untuk menjalankan *Python shell*, gunakan perintah ini:\par
+\par
+```\par
+python manage.py shell\par
+```\par
+\par
+Kita menggunakan ini bukan hanya dengan mengetikkan \ldblquote python\rdblquote  saja, karena perintah `manage.py` akan menetapkan variabel lingkungan `DJANGO_SETTINGS_MODULE`, yang memberi tahu Python di mana letak file pengaturan (`settings.py`) proyek kamu.\par
+Secara default, perintah `shell` ini juga akan secara otomatis mengimpor model dari aplikasi yang terdaftar di `INSTALLED_APPS`.\par
+\par
+Setelah kamu berada di dalam *shell*, jelajahi API basis data dengan contoh berikut:\par
+\par
+```\par
+>>> Question.objects.all()\par
+<QuerySet []>\par
+```\par
+\par
+Belum ada pertanyaan di sistem.\par
+\par
+---\par
+\par
+**Buat pertanyaan baru:**\par
+\par
+*(Support untuk zona waktu diaktifkan dalam file pengaturan default, jadi Django menyimpan tanggal dan waktu dengan informasi zona waktu. Gunakan `timezone.now()` daripada `datetime.now()` agar Django melakukan hal yang benar.)*\par
+\par
+```\par
+>>> from django.utils import timezone\par
+>>> q = Question(question_text="Apa yang baru?", pub_date=timezone.now())\par
+>>> q.save()\par
+```\par
+\par
+Simpan objek ke dalam basis data. Kamu harus memanggil `save()` secara eksplisit.\par
+\par
+```\par
+>>> q.id\par
+1\par
+```\par
+\par
+Sekarang, objek tersebut memiliki ID.\par
+\par
+\par
+Berikut hasil terjemahan halaman **34** dari gambar yang kamu kirim \f2\u-10179?\u-9145?\f0\par
+\par
+---\par
+\par
+### Django Documentation, Release 5.2.8.dev20251029180008\par
+\par
+(terusan dari halaman sebelumnya)\par
+\par
+---\par
+\par
+**Akses nilai field model melalui atribut Python:**\par
+\par
+```python\par
+>>> q.question_text\par
+"Apa yang baru?"\par
+>>> q.pub_date\par
+datetime.datetime(2012, 2, 26, 13, 0, 0, 775217, tzinfo=datetime.timezone.utc)\par
+```\par
+\par
+**Ubah nilainya dengan mengganti atribut, lalu panggil `save()`:**\par
+\par
+```python\par
+>>> q.question_text = "Ada apa?"\par
+>>> q.save()\par
+```\par
+\par
+**`objects.all()` menampilkan semua pertanyaan yang ada di database:**\par
+\par
+```python\par
+>>> Question.objects.all()\par
+<QuerySet [<Question: Question object (1)>]>\par
+```\par
+\par
+---\par
+\par
+Tunggu sebentar.\par
+`<Question: Question object (1)>` bukan representasi yang berguna dari objek ini.\par
+Mari kita perbaiki dengan mengedit model `Question` (di file `polls/models.py`) dan menambahkan metode `__str__()` ke kedua kelas `Question` dan `Choice`.\par
+\par
+---\par
+\par
+### Question dan Choice:\par
+\par
+```python\par
+from django.db import models\par
+\par
+class Question(models.Model):\par
+    # ...\par
+    def __str__(self):\par
+        return self.question_text\par
+\par
+class Choice(models.Model):\par
+    # ...\par
+    def __str__(self):\par
+        return self.choice_text\par
+```\par
+\par
+---\par
+\par
+Penting untuk menambahkan metode `__str__()` ke model kamu \f1\emdash  tidak hanya untuk kenyamanan saat menggunakan *interactive prompt*, tetapi juga karena representasi objek tersebut digunakan di seluruh antarmuka administratif Django yang dibuat secara otomatis.\par
+\par
+Sekarang, mari kita tambahkan metode khusus ke model ini:\f0\par
+\par
+\par
+\lang9\par
+\par
+**Listing 14: polls/models.py**\par
+\par
+```python\par
+import datetime\par
+\par
+from django.db import models\par
+from django.utils import timezone\par
+\par
+class Question(models.Model):\par
+    # ...\par
+    def was_published_recently(self):\par
+        return self.pub_date >= timezone.now() - datetime.timedelta(days=1)\par
+```\par
+\par
+Perhatikan penambahan *import* untuk modul `datetime` dan `from django.utils import timezone`, untuk menggunakan waktu standar Python dan *utilities* zona waktu Django di `django.utils.timezone`, yang direkomendasikan untuk digunakan.\par
+Jika kamu belum familiar dengan penanganan waktu di Python, kamu bisa mempelajarinya lebih lanjut di dokumentasi resmi tentang dukungan zona waktu Django.\par
+\par
+Simpan perubahan ini dan mulai *shell interaktif* Python yang baru.\par
+(Jika tanda prompt tiga chevron `>>>` masih muncul, berarti kamu masih di *shell* lama dan perlu keluar menggunakan `exit()`. Jalankan kembali `python manage.py shell` untuk memuat ulang modelnya.)\par
+\par
+---\par
+\par
+**Pastikan metode `__str__()` yang kamu tambahkan sebelumnya berfungsi:**\par
+\par
+```python\par
+>>> Question.objects.all()\par
+<QuerySet [<Question: Apa kabar?>]>\par
+```\par
+\par
+---\par
+\par
+**Django menyediakan API pencarian database yang sangat kuat yang sepenuhnya didorong oleh *keyword arguments*:**\par
+\par
+```python\par
+>>> Question.objects.filter(id=1)\par
+<QuerySet [<Question: Apa kabar?>]>\par
+>>> Question.objects.filter(question_text__startswith="Apa")\par
+<QuerySet [<Question: Apa kabar?>]>\par
+```\par
+\par
+---\par
+\par
+**Dapatkan pertanyaan yang diterbitkan pada tahun ini:**\par
+\par
+```python\par
+>>> from django.utils import timezone\par
+>>> current_year = timezone.now().year\par
+>>> Question.objects.get(pub_date__year=current_year)\par
+<Question: Apa kabar?>\par
+```\par
+\par
+---\par
+\par
+**Jika ID yang diminta tidak ada, Django akan menimbulkan *exception*:**\par
+\par
+```python\par
+>>> Question.objects.get(id=2)\par
+```\par
+\par
+\par
+```text\par
+Traceback (most recent call last):\par
+    ...\par
+DoesNotExist: Question matching query does not exist.\par
+```\par
+\par
+**Penjelasan:**\par
+Pencarian berdasarkan *primary key* adalah kasus yang paling umum, jadi Django menyediakan pintasan untuk pencarian dengan *primary key*.\par
+\par
+Kode berikut identik dengan `Question.objects.get(id=1)`:\par
+\par
+```python\par
+>>> Question.objects.get(pk=1)\par
+<Question: Apa kabar?>\par
+```\par
+\par
+---\par
+\par
+**Pastikan metode kustom yang kita buat sebelumnya berfungsi:**\par
+\par
+```python\par
+>>> q = Question.objects.get(pk=1)\par
+>>> q.was_published_recently()\par
+```\par
+\par
+---\par
+\par
+**Sekarang buat objek `Choice` terkait untuk `Question`.**\par
+Metode `create` akan membuat objek baru `Choice`, melakukan perintah `INSERT` di database, menambahkannya ke set pilihan yang tersedia, dan mengembalikan objek `Choice` baru.\par
+\par
+Django membuat satu *set* (disebut `choice_set`) untuk menampung sisi lain dari relasi *ForeignKey*. Relasi ini dapat diakses melalui API seperti berikut:\par
+\par
+```python\par
+>>> q = Question.objects.get(pk=1)\par
+```\par
+\par
+---\par
+\par
+**Tampilkan pilihan apa pun dari objek terkait \f1\emdash  sejauh ini belum ada.**\par
+\par
+```python\par
+>>> q.choice_set.all()\par
+<QuerySet []>\par
+```\par
+\par
+---\par
+\par
+**Tambahkan tiga pilihan (choice):**\par
+\par
+```python\par
+>>> q.choice_set.create(choice_text="Tidak banyak", votes=0)\par
+<Choice: Tidak banyak>\par
+>>> q.choice_set.create(choice_text="Langit", votes=0)\par
+<Choice: Langit>\par
+>>> q.choice_set.create(choice_text="Cuma ngoding aja", votes=0)\par
+<Choice: Cuma ngoding aja>\par
+```\par
+\par
+---\par
+\par
+**Objek `Choice` memiliki akses API ke objek `Question` yang terkait:**\par
+\par
+```python\par
+>>> c = q.choice_set.all()[0]\par
+>>> c.question\par
+<Question: Apa kabar?>\par
+```\par
+\par
+---\par
+\par
+**Dan sebaliknya: Objek `Question` juga punya akses ke `Choice` terkait.**\par
+\par
+```python\par
+>>> q.choice_set.all()\par
+<QuerySet [<Choice: Tidak banyak>, <Choice: Langit>, <Choice: Cuma ngoding aja>]>\par
+```\par
+\par
+\f0\par
+\par
+```python\par
+>>> q.choice_set.count()\par
+3\par
+```\par
+\par
+API secara otomatis mengikuti hubungan (relationship) model sejauh yang kamu butuhkan.\par
+Tidak perlu menggunakan akses terpisah untuk menghubungkan relasi \f1\emdash  ini bekerja sedalam apa pun yang kamu mau, tanpa batas.\par
+\par
+**Contoh:**\par
+Cari semua *Choice* untuk setiap *Question* yang tanggal publikasinya berada pada tahun ini\par
+(menggunakan variabel `current_year` yang sudah dibuat sebelumnya).\par
+\par
+```python\par
+>>> Choice.objects.filter(question__pub_date__year=current_year)\par
+<QuerySet [<Choice: Tidak banyak>, <Choice: Langit>, <Choice: Cuma ngoding aja>]>\par
+```\par
+\par
+---\par
+\par
+**Hapus salah satu pilihan. Gunakan metode `delete()` untuk itu:**\par
+\par
+```python\par
+>>> c = q.choice_set.filter(choice_text__startswith="Cuma ngoding")\par
+>>> c.delete()\par
+```\par
+\par
+---\par
+\par
+Untuk informasi lebih lanjut tentang hubungan antar model, lihat bagian **Accessing related objects**.\par
+Untuk cara menggunakan tanda garis bawah ganda (`__`) dalam pencarian API, lihat **Field lookups**.\par
+Untuk referensi lengkap tentang API database, lihat **Database API reference**.\par
+\par
+---\par
+\par
+## 2.4.5 Memperkenalkan Django Admin\par
+\par
+### \f2\u-10179?\u-9000?\f0  *Filosofi*\par
+\par
+Membuat situs admin untuk staf atau klien agar bisa menambahkan, mengubah, dan menghapus konten adalah pekerjaan yang membosankan dan tidak membutuhkan banyak kreativitas.\par
+Karena itu, Django secara otomatis membuat antarmuka admin untuk model yang kamu buat.\par
+\par
+Django dibuat dengan asumsi bahwa ada pemisahan yang jelas antara \ldblquote konten penerbitan\rdblquote  dan \ldblquote situs publik\rdblquote .\par
+Para manajer situs menggunakan sistem ini untuk menambahkan berita, acara, skor olahraga, dan sebagainya \f1\emdash\par
+sedangkan situs publik menampilkan data tersebut.\par
+Django menyelesaikan masalah dengan menyediakan antarmuka terpadu untuk pengelolaan konten.\par
+\par
+Panel admin tidak dimaksudkan untuk digunakan oleh pengunjung situs, melainkan untuk *site managers* (pengelola situs).\par
+\par
+---\par
+\par
+### Membuat pengguna admin\par
+\par
+Pertama, kamu perlu membuat pengguna yang dapat masuk ke situs admin.\par
+Jalankan perintah berikut:\par
+\par
+```bash\par
+python manage.py createsuperuser\par
+```\par
+\par
+Masukkan nama pengguna dan kata sandi yang diinginkan.\par
+\par
+\f0\par
+\par
+```\par
+Username: admin\par
+```\par
+\par
+Kamu kemudian akan diminta untuk memasukkan alamat email yang diinginkan.\par
+\par
+```\par
+Email address: admin@example.com\par
+```\par
+\par
+Langkah terakhir adalah memasukkan kata sandi. Kamu akan diminta untuk mengetikkan kata sandi dua kali untuk konfirmasi.\par
+\par
+```\par
+Password: **********\par
+Password (again): **********\par
+Superuser created successfully.\par
+```\par
+\par
+---\par
+\par
+### Menjalankan server pengembangan\par
+\par
+Antarmuka admin Django diaktifkan secara default.\par
+Sekarang kita akan menjalankan server pengembangan dan menjelajahinya.\par
+\par
+Jika server belum berjalan, jalankan perintah berikut:\par
+\par
+```bash\par
+python manage.py runserver\par
+```\par
+\par
+Sekarang, buka peramban web (browser) dan masuk ke `/admin/` di domain lokal kamu, misalnya:\par
+[`http://127.0.0.1:8000/admin/`](http://127.0.0.1:8000/admin/)\par
+\par
+Kamu akan melihat tampilan layar masuk admin seperti berikut:\par
+\par
+---\par
+\par
+**Django administration**\par
+\par
+* **Username:**\par
+* **Password:**\par
+\par
+[Log in]\par
+\par
+\par
+---\par
+\par
+### Masuk ke situs admin\par
+\par
+Sekarang, coba log in menggunakan akun superuser yang tadi kamu buat. Kamu akan melihat halaman indeks admin Django:\par
+\par
+* Kamu seharusnya akan melihat beberapa jenis konten yang bisa diubah: grup dan pengguna. Mereka disediakan oleh aplikasi `django.contrib.auth`. ([Django Project][1])\par
+* Tapi\'85 dimana aplikasi polling kita? Belum muncul di halaman indeks admin! ([Django Project][1])\par
+\par
+---\par
+\par
+### Membuat aplikasi polling dapat diubah lewat admin\par
+\par
+Tinggal satu langkah lagi: beritahu admin bahwa objek-objek dari model Polls (aplikasi \ldblquote polls\rdblquote ) harus punya antarmuka di admin. Untuk itu, buka file `polls/admin.py`, dan edit agar seperti berikut:\par
+\par
+```python\par
+from django.contrib import admin\par
+from .models import Question\par
+\par
+admin.site.register(Question)\par
+```\par
+\par
+Sekarang aplikasi Anda dikenali oleh admin \'85 ([Django Project][1])\par
+\par
+---\par
+\par
+### Eksplorasi antarmuka admin gratis\par
+\par
+Setelah kita mendaftarkan `Question`, Django tahu bahwa ia harus muncul di halaman indeks admin: ([Django Project][1])\par
+\par
+* Klik \ldblquote Questions\rdblquote . Sekarang Kamu berada di halaman daftar perubahan (change list) untuk objek pertanyaan. Halaman ini menampilkan semua pertanyaan dalam database dan memungkinkan kamu memilih satu untuk diubah. Di sana ada pertanyaan \ldblquote What\rquote s up?\rdblquote  yang kita buat sebelumnya. ([Django Project][1])\par
+* Klik pertanyaan \ldblquote What\rquote s up?\rdblquote  untuk mengeditnya. ([Django Project][1])\par
+\par
+Hal-hal yang perlu diperhatikan:\par
+\par
+* Formulir dibuat secara otomatis dari model `Question`.\par
+* Tipe field model yang berbeda (`DateTimeField`, `CharField`) dipetakan ke widget HTML yang sesuai.\par
+* Setiap `DateTimeField` mendapat shortcut JavaScript gratis: misalnya tanggal punya opsi "Today", dan waktu punya popup \ldblquote Now\rdblquote  serta daftar waktu umum. ([Django Project][1])\par
+* Bagian bawah halaman menyediakan beberapa opsi:\par
+\par
+  * Save \f1\endash  Simpan perubahan dan kembali ke daftar perubahan untuk objek jenis ini.\par
+  * Save and continue editing \endash  Simpan lalu muat kembali halaman admin untuk objek ini.\par
+  * Save and add another \endash  Simpan lalu muat formulir kosong baru untuk jenis objek ini.\par
+  * Delete \endash  Menampilkan halaman konfirmasi untuk penghapusan. ([Django Project][1])\par
+\par
+---\par
+\par
+### Catatan tambahan\par
+\par
+Jika nilai "Date published" (\lquote Tanggal publikasi\rquote ) **tidak** sesuai waktu kamu membuat pertanyaan di Tutorial 1, mungkin kamu lupa menyetel `TIME_ZONE` di pengaturan (`settings.py`). Ubah saja agar zona waktu sesuai dan muat ulang halaman, lalu periksa nilainya. ([Django Project][1])\par
+\par
+---\par
+\par
+Kalau mau, saya bisa cari **teks lengkap halaman-39** dan terjemahkan juga \emdash  kamu mau saya lanjut ke sana?\par
+\par
+[1]: {{\field{\*\fldinst{HYPERLINK https://docs.djangoproject.com/en/5.2/intro/tutorial02/?utm_source=chatgpt.com }}{\fldrslt{https://docs.djangoproject.com/en/5.2/intro/tutorial02/?utm_source=chatgpt.com\ul0\cf0}}}}\f1\fs22  "Writing your first Django app, part 2"\f0\par
+\f1\par
+\f0\par
+\par
+---\par
+\par
+### **2.4.5 Memperkenalkan Django Admin (lanjutan)**\par
+\par
+Masuk ke situs admin dengan nama pengguna dan kata sandi superuser yang telah kamu buat sebelumnya. Kamu akan melihat layar utama situs admin Django.\par
+\par
+Situs admin Django secara otomatis membuat antarmuka yang memungkinkan kamu menambah, mengedit, dan menghapus objek dari model yang sudah kamu daftarkan. Namun, saat ini belum ada model yang ditampilkan, karena kita belum memberi tahu Django model mana yang akan dikelola oleh admin.\par
+\par
+---\par
+\par
+### **Mendaftarkan model ke admin**\par
+\par
+Untuk membuat model *Question* dapat dikelola melalui admin, buka file `polls/admin.py` dan ubah isinya seperti berikut:\par
+\par
+```python\par
+from django.contrib import admin\par
+from .models import Question\par
+\par
+admin.site.register(Question)\par
+```\par
+\par
+---\par
+\par
+Sekarang, buka kembali browser dan periksa halaman admin. Kamu akan melihat bahwa model *Questions* kini muncul di sana.\par
+Kamu dapat menambah pertanyaan baru, mengedit yang sudah ada, dan menghapusnya langsung melalui antarmuka admin \f1\emdash  semuanya tanpa perlu menulis kode tambahanMantapp \f2\u-10179?\u-8700?\u-10179?\u-9046?\f0  kita lanjut ke **halaman 41** ya \f1\emdash  di bagian ini Django mulai menjelaskan bagaimana membuat *template* HTML untuk menampilkan pertanyaan dan pilihan (*choices*) dari aplikasi polling.\par
+\par
+Berikut terjemahan halaman **41** \f2\u-10179?\u-9145?\f0\par
+\par
+---\par
+\par
+### **2.6 Membuat Template untuk Tampilan Detail**\par
+\par
+Sampai tahap ini, kita sudah menyiapkan tampilan `detail()` yang memuat objek *Question* dari database dan mengirimkannya ke template bernama `polls/detail.html`.\par
+Sekarang kita akan membuat file template tersebut agar tampilan web dapat menampilkan pertanyaan dan daftar pilihan jawaban.\par
+\par
+---\par
+\par
+### **Langkah 1: Membuat Folder Template**\par
+\par
+Di dalam direktori aplikasi `polls/`, buat sebuah folder bernama `templates`.\par
+Di dalam folder tersebut, buat subfolder bernama `polls` lagi (struktur dua lapis ini penting agar Django dapat membedakan template dari aplikasi lain yang mungkin juga bernama sama).\par
+\par
+Struktur akhirnya akan terlihat seperti ini:\par
+\par
+```\par
+polls/\par
+    \f3\u9500?\u9472?\u9472?\f0  templates/\par
+    \f3\u9474?\f0      \f3\u9492?\u9472?\u9472?\f0  polls/\par
+    \f3\u9474?\f0            \f3\u9492?\u9472?\u9472?\f0  detail.html\par
+```\par
+\par
+---\par
+\par
+### **Langkah 2: Menulis Template detail.html**\par
+\par
+Buka file `polls/templates/polls/detail.html`, lalu isi dengan kode berikut:\par
+\par
+```html\par
+<h1>\{\{ question.question_text \}\}</h1>\par
+<ul>\par
+\{% for choice in question.choice_set.all %\}\par
+    <li>\{\{ choice.choice_text \}\}</li>\par
+\{% endfor %\}\par
+</ul>\par
+```\par
+\par
+Kode di atas menggunakan sintaks *template Django*:\par
+\par
+* Variabel seperti `\{\{ question.question_text \}\}` menampilkan data dari objek model.\par
+* Tag `\{% for %\}` digunakan untuk membuat perulangan atas setiap pilihan (*Choice*) yang terkait dengan pertanyaan tersebut.\par
+\par
+---\par
+\par
+### **Langkah 3: Coba Jalankan**\par
+\par
+Sekarang jalankan server pengembangan:\par
+\par
+```bash\par
+python manage.py runserver\par
+```\par
+\par
+Lalu buka browser dan masuk ke URL:\par
+\par
+```\par
+{{\field{\*\fldinst{HYPERLINK http://127.0.0.1:8000/polls/1/ }}{\fldrslt{http://127.0.0.1:8000/polls/1/\ul0\cf0}}}}\f0\fs22\par
+```\par
+\par
+Jika pertanyaan dengan ID 1 ada di database, kamu akan melihat halaman yang menampilkan teks pertanyaannya dan daftar pilihan jawaban yang tersedia.\par
+\par
+---\par
+\par
+\f3\u10024?\f0  **Catatan:** Jika kamu belum menambahkan pilihan apa pun untuk pertanyaan itu, buka panel admin Django dan tambahkan beberapa *choices* pada pertanyaan di menu **Questions \f4\u8594?\f0  Choices**.\par
+\par
+---\par
+\lang9\par
+\par
+\par
+### **2.5 Membuat Tampilan Publik (Views)**\par
+\par
+Sekarang setelah kita memiliki sistem admin untuk mengelola data, saatnya membuat *tampilan publik* untuk pengguna \f1\emdash  yaitu halaman web tempat orang bisa melihat pertanyaan dan memberikan suara (*vote*).\par
+\par
+Sebelumnya, kita sudah membuat tampilan sederhana di file `polls/views.py`, yang hanya mengembalikan teks sederhana dari fungsi `HttpResponse`. Sekarang kita akan membuat tampilan yang lebih kompleks dengan menggunakan *template*.\par
+\par
+---\par
+\par
+### **Langkah 1: Tambahkan URL untuk Tampilan Detail**\par
+\par
+Buka file `polls/urls.py` dan ubah agar terlihat seperti berikut:\par
+\par
+```python\par
+from django.urls import path\par
+from . import views\par
+\par
+app_name = "polls"\par
+urlpatterns = [\par
+    path("", views.index, name="index"),\par
+    path("<int:question_id>/", views.detail, name="detail"),\par
+]\par
+```\par
+\par
+Di sini, kita menambahkan *path parameter* baru `question_id` yang akan mengarah ke tampilan detail setiap pertanyaan.\par
+\par
+---\par
+\par
+### **Langkah 2: Tambahkan Fungsi View Baru**\par
+\par
+Selanjutnya, buka file `polls/views.py` dan tambahkan fungsi `detail` berikut:\par
+\par
+```python\par
+from django.http import HttpResponse\par
+from .models import Question\par
+\par
+def detail(request, question_id):\par
+    return HttpResponse(f"You're looking at question \{question_id\}.")\par
+```\par
+\par
+Saat pengguna mengunjungi URL seperti `/polls/5/`, mereka akan melihat pesan:\par
+\par
+> \ldblquote You're looking at question 5.\rdblquote\par
+\par
+---\par
+\par
+### **Langkah 3: Menampilkan Pertanyaan dari Database**\par
+\par
+Sekarang ubah tampilan `detail` agar mengambil data *Question* dari database, bukan hanya menampilkan teks statis.\par
+\par
+```python\par
+from django.shortcuts import get_object_or_404, render\par
+from .models import Question\par
+\par
+def detail(request, question_id):\par
+    question = get_object_or_404(Question, pk=question_id)\par
+    return render(request, "polls/detail.html", \{"question": question\})\par
+```\par
+\par
+Fungsi `get_object_or_404()` akan menampilkan halaman kesalahan 404 jika pertanyaan tidak ditemukan.\par
+\par
+---\par
+\par
+\f0\par
+\f1\par
+\par
+\par
+\par
+\par
+\par
+\par
+\par
+\f0\par
+}
+ 
